@@ -12,7 +12,7 @@ fi
 
 mkdir -p "$(dirname "$PLIST_PATH")"
 
-python - "$ROOT_DIR" "$PYTHON_BIN" "$PLIST_PATH" "${PATH:-}" <<'PY'
+"$PYTHON_BIN" - "$ROOT_DIR" "$PYTHON_BIN" "$PLIST_PATH" "${PATH:-}" <<'PY'
 import plistlib
 import sys
 from pathlib import Path
