@@ -11,10 +11,12 @@ license-files = ["LICENSE"]
 dependencies = [
     "discord.py>=2.4",
     "python-dotenv>=1.0",
+    "python-telegram-bot>=21.0",
 ]
 
 [project.scripts]
 discord-claude-assistant = "src.main:main"
+claudecord-telegram = "src.telegram_bot:main"
 
 [tool.setuptools.packages.find]
 include = ["src*"]
@@ -57,3 +59,4 @@ select = ["E4", "E7", "E9", "F", "I", "UP", "B", "SIM", "C4", "RUF", "FURB", "PL
 # src.main is how the bot loads its .env. Sorting these imports stops the bot
 # from starting -- see the comment at the top of the file.
 "src/main.py" = ["E402", "I001"]
+"src/telegram_bot.py" = ["E402", "I001"]

@@ -1,18 +1,18 @@
-<!-- Generated: 2026-08-31 | Updated: 2026-09-01 -->
+<!-- Generated: 2026-08-31 | Updated: 2026-09-21 -->
 
 # claudecord (discord-claude-assistant)
 
 ## Purpose
-Discord 봇으로 로컬 PC의 Claude Code CLI를 원격 조종하는 파이썬 애플리케이션. 화이트리스트로 인증된 사용자가 Discord 메시지를 보내면, 봇이 `claude -p` 서브프로세스를 스트리밍 모드로 실행하고 그 산출물(`output.md`, `manifest.json`에 등재된 파일)을 다시 Discord 채널로 첨부해 돌려준다. 클라우드 호스팅 없이 Discord Gateway의 outbound WebSocket만으로 동작한다.
+Discord 또는 Telegram 봇으로 로컬 PC의 Claude Code CLI를 원격 조종하는 파이썬 애플리케이션. 화이트리스트로 인증된 사용자가 메시지를 보내면, 봇이 `claude -p` 서브프로세스를 스트리밍 모드로 실행하고 그 산출물(`output.md`, `manifest.json`에 등재된 파일)을 다시 채팅으로 첨부해 돌려준다. 클라우드 호스팅 없이 Discord Gateway의 outbound WebSocket / Telegram Bot API의 polling만으로 동작한다. 두 플랫폼은 완전히 독립된 진입점(`src/main.py` / `src/telegram_bot.py`)이며, 잡 실행 파이프라인(`orchestrator`/`runner`/`sessions`/`parser`/`timing`/`greetings`)은 플랫폼과 무관하게 공유한다.
 
 ## Key Files
 
 | File | Description |
 |------|-------------|
-| `pyproject.toml` | 패키지 메타데이터 + 도구 설정의 단일 진실 원천. `requires-python >=3.11`, 런타임 의존성은 `discord.py>=2.4`와 `python-dotenv>=1.0` 두 개뿐. `[dependency-groups] dev`에 `pytest`·`ruff`, `[tool.pytest.ini_options]`에 `pythonpath`, `[tool.ruff.lint]`에 선택 규칙과 **각 규칙을 왜 뺐는지**가 주석으로 붙어 있다 |
-| `.env.example` | 환경변수 템플릿. 필수는 `DISCORD_BOT_TOKEN`·`OWNER_DISCORD_ID`·`ALLOWED_CHANNEL_IDS` 셋뿐이고 나머지(`PROJECTS_FILE`, `RUNS_RETENTION_DAYS`, `CLAUDE_MODEL`, `WARM_CLAUDE*`, `JOB_TIMEOUT_SECONDS`, `MAX_CONCURRENT_JOBS`, `OUTPUT_INLINE_MAX_CHUNKS`, `DEBUG_TIMING` 등)는 전부 기본값이 있다 |
+| `pyproject.toml` | 패키지 메타데이터 + 도구 설정의 단일 진실 원천. `requires-python >=3.11`, 런타임 의존성은 `discord.py>=2.4`·`python-dotenv>=1.0`·`python-telegram-bot>=21.0` 세 개. `[dependency-groups] dev`에 `pytest`·`ruff`, `[tool.pytest.ini_options]`에 `pythonpath`, `[tool.ruff.lint]`에 선택 규칙과 **각 규칙을 왜 뺐는지**가 주석으로 붙어 있다 |
+| `.env.example` | 환경변수 템플릿. Discord 필수 3개(`DISCORD_BOT_TOKEN`·`OWNER_DISCORD_ID`·`ALLOWED_CHANNEL_IDS`)와 Telegram 필수 2개+선택 1개(`TELEGRAM_BOT_TOKEN`·`OWNER_TELEGRAM_ID`·`ALLOWED_TELEGRAM_CHAT_IDS`)가 따로 묶여 있고, 어느 한쪽 봇만 쓴다면 반대쪽 블록은 전부 생략 가능하다. 나머지(`PROJECTS_FILE`, `RUNS_RETENTION_DAYS`, `CLAUDE_MODEL`, `WARM_CLAUDE*`, `JOB_TIMEOUT_SECONDS`, `MAX_CONCURRENT_JOBS`, `OUTPUT_INLINE_MAX_CHUNKS`, `DEBUG_TIMING` 등)는 두 플랫폼 공통이고 전부 기본값이 있다 |
 | `projects.example.toml` | `@태그` → 프로젝트 디렉터리 매핑 예시. `projects.toml`로 복사해 쓰며 그 사본은 git-ignored. 파일이 없으면 태그 없이 정상 동작한다 |
-| `README.md` | 한국어 사용자 문서. Discord 앱 생성 → 권한 설정 → ID 확보 → `.env` 작성 → 실행 순서와 성능 튜닝 변수 표 |
+| `README.md` | 한국어 사용자 문서. Discord 앱 생성 → 권한 설정 → ID 확보 → `.env` 작성 → 실행 순서와 성능 튜닝 변수 표. Telegram은 별도 섹션("Telegram 봇을 쓰고 싶다면")으로 같은 흐름을 다룬다 (BotFather → 본인 ID 확보 → `.env` → 실행) |
 | `LICENSE` | MIT. `pyproject.toml`의 `license-files`가 이 파일을 가리킨다 |
 | `working_m.gif` | 작업 중 상태 메시지에 첨부되는 애니메이션 (192KB). `src/status.py`가 참조하며 `WORKING_GIF=1`일 때만 쓰인다 |
 | `.gitignore` | `projects.toml`(개인 설정), `.venv`, 런타임 상태 디렉터리를 추적에서 빼는 곳. 개인 경로가 담긴 파일을 새로 만들면 여기부터 확인할 것 |
@@ -23,7 +23,7 @@ Discord 봇으로 로컬 PC의 Claude Code CLI를 원격 조종하는 파이썬 
 | Directory | Purpose |
 |-----------|---------|
 | `src/` | 봇 애플리케이션 전체 소스 (see `src/AGENTS.md`) |
-| `tests/` | `unittest` 기반 테스트 스위트, 382개 테스트 (see `tests/AGENTS.md`) |
+| `tests/` | `unittest`/`pytest` 기반 테스트 스위트, 435개 테스트 (see `tests/AGENTS.md`) |
 | `scripts/` | macOS(bash)/Windows(PowerShell) 셋업·실행·상시구동 스크립트 (see `scripts/AGENTS.md`) |
 | `examples/` | Claude CLI `stream-json` 이벤트 샘플 (see `examples/AGENTS.md`) |
 | `.github/` | GitHub Actions CI. 3개 OS × 파이썬 2버전 테스트 + 린트 (see `.github/AGENTS.md`) |
@@ -32,18 +32,19 @@ Discord 봇으로 로컬 PC의 Claude Code CLI를 원격 조종하는 파이썬 
 ## For AI Agents
 
 ### Working In This Directory
-- 진입점은 `src/main.py`이고, 실행은 `python -m src.main` 또는 `scripts/run_bot.sh`다. 이 저장소에는 `bot.py`도 `requirements.txt`도 없다 (README가 그 둘을 안내하던 것은 이슈 #10에서 고쳤다).
+- 진입점은 Discord가 `src/main.py`(`python -m src.main` 또는 `scripts/run_bot.sh`), Telegram이 `src/telegram_bot.py`(`python -m src.telegram_bot` 또는 `scripts/run_telegram_bot.sh`)다. 둘 중 하나만 실행하면 되고 이 저장소에는 `bot.py`도 `requirements.txt`도 없다 (README가 그 둘을 안내하던 것은 이슈 #10에서 고쳤다).
 - 설치는 `pip install -e .` (= `scripts/setup.sh`) 또는 `uv sync --group dev`. 의존성은 `pyproject.toml`이 단일 진실 원천이다.
 - 사용자 대면 문자열은 전부 한국어다. 새 메시지를 추가할 때 같은 톤(존댓말, 간결한 상태 문구)을 유지할 것.
-- **Discord로 나가는 텍스트에 절대경로를 실어 보내지 말 것.** 예외 메시지는 `src/errors.py`의 `redact_paths`/`safe_error_text`를 반드시 거친다 (#19·#25·#26 묶음).
+- **채팅으로 나가는 텍스트에 절대경로를 실어 보내지 말 것.** 예외 메시지는 `src/errors.py`의 `redact_paths`/`safe_error_text`를 반드시 거친다 (#19·#25·#26 묶음). Telegram 쪽도 동일하게 거친다.
 - 이 봇은 Windows도 지원 대상이다. CI에 windows 레인이 있고 블로킹이다. 경로·프로세스·인코딩을 다룰 때 POSIX 전용 가정을 넣지 말 것.
+- Discord와 Telegram의 전송 계층(`main.py`/`auth.py`/`outputs.py`/`status.py` vs `telegram_bot.py`/`telegram_auth.py`/`telegram_outputs.py`/`telegram_status.py`)은 서로 의존하지 않는다 — 한쪽을 고칠 때 반대쪽이 조용히 갈라지지 않는지 확인할 것. 공유 파이프라인(`orchestrator`/`runner`/`sessions`/`parser`/`timing`/`greetings`)을 고치면 양쪽 모두에 영향을 준다.
 
 ### Testing Requirements
 환경변수 없이 그냥 돈다. `pyproject.toml`의 `[tool.pytest.ini_options]`가 `pythonpath`를 잡고
-(이슈 #8), `src/auth.py`는 import가 아니라 `ensure_configured()` 호출 시점에 검증한다(이슈 #9).
+(이슈 #8), `src/auth.py`/`src/telegram_auth.py`는 import가 아니라 `ensure_configured()`/`ensure_telegram_configured()` 호출 시점에 검증한다(이슈 #9).
 
 ```bash
-uv run pytest -q          # 기대 결과: 382 passed, 14 subtests passed
+uv run pytest -q          # 기대 결과: 435 passed, 14 subtests passed
 uv run ruff check .       # 기대 결과: All checks passed!
 ```
 
@@ -66,8 +67,9 @@ uv run ruff check .       # 기대 결과: All checks passed!
 
 ### External
 - `discord.py>=2.4` — Discord Gateway 클라이언트. `message_content` intent 필수
+- `python-telegram-bot>=21.0` — Telegram Bot API 클라이언트. `Application.run_polling`으로 동작(별도 웹훅 호스팅 불필요)
 - `python-dotenv>=1.0` — 루트 `.env` 로딩
 - **Claude Code CLI** — `claude` 실행 파일이 PATH에 있거나 `CLAUDE_BIN`으로 지정되어야 함. `pyproject.toml`에는 잡히지 않는 암묵적 시스템 의존성
-- SVG → PNG 미리보기 렌더러 (전부 선택): `qlmanage`(macOS), `rsvg-convert`(librsvg), `inkscape`, `cairosvg`(파이썬 패키지). 하나도 없으면 미리보기 없이 SVG 원본만 첨부한다
+- SVG → PNG 미리보기 렌더러 (전부 선택, Discord 쪽만): `qlmanage`(macOS), `rsvg-convert`(librsvg), `inkscape`, `cairosvg`(파이썬 패키지). 하나도 없으면 미리보기 없이 SVG 원본만 첨부한다. Telegram 쪽(`telegram_outputs.py`)은 이 미리보기 렌더링을 구현하지 않는다
 
 <!-- MANUAL: Any manually added notes below this line are preserved on regeneration -->

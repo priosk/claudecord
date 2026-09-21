@@ -1,5 +1,5 @@
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-08-31 | Updated: 2026-08-31 -->
+<!-- Generated: 2026-08-31 | Updated: 2026-09-21 -->
 
 # scripts
 
@@ -10,11 +10,12 @@
 
 | File | Description |
 |------|-------------|
-| `setup.sh` / `setup.ps1` | `.venv` 생성 후 `pip install -e .`. Windows판은 `py -3` 런처를 우선 시도 |
-| `run_bot.sh` / `run_bot.ps1` | 봇 포그라운드 실행. `.venv`의 파이썬(`.sh`는 `.venv/bin/python`, `.ps1`은 `.venv\Scripts\python.exe`)으로 `python -m src.main`. `.venv`가 없으면 `scripts/setup`을 안내하며 중단 |
-| `check_claude.sh` / `check_claude.ps1` | Claude CLI 연결 진단. `--version` 후 `-p "ping"`으로 왕복 확인. 둘 다 `.env`를 직접 파싱해 `CLAUDE_BIN`을 존중하고, 없으면 PATH에서 찾는다 |
-| `launchd_load.sh` | macOS LaunchAgent 등록. 인라인 파이썬으로 plist를 만들어 `~/Library/LaunchAgents/`에 쓰고 `launchctl load`. `RunAtLoad` + `KeepAlive`로 상시 구동 |
-| `register_scheduled_task.ps1` | Windows 작업 스케줄러 등록. 로그온 시 기동, 3회 재시작, 로그는 `%LOCALAPPDATA%\discord-claude-assistant\logs\bot.log` |
+| `setup.sh` / `setup.ps1` | `.venv` 생성 후 `pip install -e .`. Windows판은 `py -3` 런처를 우선 시도. Discord/Telegram 두 봇 모두 이 하나의 `.venv`를 공유한다 |
+| `run_bot.sh` / `run_bot.ps1` | Discord 봇 포그라운드 실행. `.venv`의 파이썬(`.sh`는 `.venv/bin/python`, `.ps1`은 `.venv\Scripts\python.exe`)으로 `python -m src.main`. `.venv`가 없으면 `scripts/setup`을 안내하며 중단 |
+| `run_telegram_bot.sh` / `run_telegram_bot.ps1` | Telegram 봇 포그라운드 실행. `run_bot.sh`/`run_bot.ps1`과 완전히 동일한 구조로 `python -m src.telegram_bot`만 다르다 |
+| `check_claude.sh` / `check_claude.ps1` | Claude CLI 연결 진단. `--version` 후 `-p "ping"`으로 왕복 확인. 둘 다 `.env`를 직접 파싱해 `CLAUDE_BIN`을 존중하고, 없으면 PATH에서 찾는다. 어느 쪽 봇을 쓰든 이 진단은 동일하게 유효하다 |
+| `launchd_load.sh` | macOS LaunchAgent 등록. 인라인 파이썬으로 plist를 만들어 `~/Library/LaunchAgents/`에 쓰고 `launchctl load`. `RunAtLoad` + `KeepAlive`로 상시 구동. **Discord 봇(`src/main.py`) 전용** — Telegram 봇은 아직 이 자동화가 없다 |
+| `register_scheduled_task.ps1` | Windows 작업 스케줄러 등록. 로그온 시 기동, 3회 재시작, 로그는 `%LOCALAPPDATA%\discord-claude-assistant\logs\bot.log`. **Discord 봇 전용**, 위와 동일한 이유 |
 | `unregister_scheduled_task.ps1` | 위 작업 해제 |
 
 ## Subdirectories
@@ -41,7 +42,8 @@
 ## Dependencies
 
 ### Internal
-- `src.main` — 모든 실행 스크립트의 진입점
+- `src.main` — `run_bot.sh`/`run_bot.ps1`의 진입점
+- `src.telegram_bot` — `run_telegram_bot.sh`/`run_telegram_bot.ps1`의 진입점
 - 프로젝트 루트 `.env`, `.venv`, `pyproject.toml`
 
 ### External

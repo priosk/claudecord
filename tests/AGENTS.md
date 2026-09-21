@@ -1,40 +1,45 @@
 <!-- Parent: ../AGENTS.md -->
-<!-- Generated: 2026-08-31 | Updated: 2026-09-01 -->
+<!-- Generated: 2026-08-31 | Updated: 2026-09-21 -->
 
 # tests
 
 ## Purpose
-`src/` 각 모듈에 1:1로 대응하는 `unittest` 기반 테스트 스위트. 총 382개 테스트(+ subtest 14개)가 있으며 pytest로 실행한다. Discord Gateway나 Claude CLI 같은 외부 의존성은 전부 `unittest.mock`으로 대체하므로 네트워크·서브프로세스 없이 돈다.
+`src/` 각 모듈에 1:1로 대응하는 `unittest`/`pytest` 기반 테스트 스위트. 총 435개 테스트(+ subtest 14개)가 있으며 pytest로 실행한다. Discord Gateway·Telegram polling이나 Claude CLI 같은 외부 의존성은 전부 `unittest.mock`(또는 생성자가 단순한 `telegram` 객체는 실제 인스턴스)으로 대체하므로 네트워크·서브프로세스 없이 돈다.
 
 ## Key Files
 
 | File | Tests | Description |
 |------|-------|-------------|
 | `test_orchestrator.py` | 63 | 잡 디렉터리 생성, 이어하기 작업 디렉터리 해석, 오래된 잡 정리(`RUNS_RETENTION_DAYS`) |
-| `test_main.py` | 61 | 이벤트 핸들러 조립. 종료 명령 인식, 만료 세션 자동 복구, 잡 타임아웃, 동시 실행 게이트 |
+| `test_main.py` | 61 | Discord 이벤트 핸들러 조립. 종료 명령 인식, 만료 세션 자동 복구, 잡 타임아웃, 동시 실행 게이트 |
 | `test_runner.py` | 44 | Claude CLI 명령줄 조립, 스트림 파싱, 웜/콜드 경로 분기, 프로세스 종료 요약 |
-| `test_outputs.py` | 40 | manifest 경로 탈출 방어, 인라인 SVG 추출, 첨부 분할, SVG 렌더러 폴백 |
+| `test_outputs.py` | 40 | Discord manifest 경로 탈출 방어, 인라인 SVG 추출, 첨부 분할, SVG 렌더러 폴백 |
 | `test_errors.py` | 38 | 경로 삭제(redaction). 홈/절대경로/Windows 경로 축약, URL 보존, 멱등성 |
-| `test_status.py` | 31 | 진행바 포맷팅, 대기열 문구, GIF 자산 존재/부재 처리 |
+| `test_status.py` | 31 | Discord 진행바 포맷팅, 대기열 문구, GIF 자산 존재/부재 처리 |
 | `test_warm_pool.py` | 28 | 웜 프로세스 대여·반납, 유휴 TTL, 프로세스 상한, `retire` 콜백 위임 |
 | `test_sessions.py` | 27 | 세션 영속화, TTL 만료, 원자적 쓰기, 손상 저장소 격리, 레거시 포맷 흡수 |
+| `test_telegram_bot.py` | 14 | Telegram 이벤트 핸들러 조립(`test_main.py`의 축소판). 종료/`/clear` 명령, 세션 복구, 잡 타임아웃, 동시 실행 게이트 |
+| `test_telegram_status.py` | 12 | Telegram 진행바 텍스트(마크다운 없음), `editMessageText` 기반 로더, TelegramError/네트워크 오류 처리 |
+| `test_telegram_outputs.py` | 15 | Telegram meta.json/manifest.json 우선순위, 경로 탈출 방어, 첨부 용량 상한(50MB), 청크 전환 |
 | `test_timing.py` | 22 | span 기록, 재시도 시 attempt 아카이빙, 기동 오버헤드 산출, `timings.json` 기록 |
 | `test_parser.py` | 13 | `@sess-`·프로젝트 태그 파싱, `projects.toml` 로딩과 mtime 캐시 |
-| `test_auth.py` | 12 | 소유자·채널 허용 목록, 다중 소유자, 지연 설정 로딩 |
+| `test_auth.py` | 12 | Discord 소유자·채널 허용 목록, 다중 소유자, 지연 설정 로딩 |
+| `test_telegram_auth.py` | 12 | Telegram 소유자·채팅 허용 목록(`test_auth.py`와 동형), 1:1 개인 채팅 우회, 다중 소유자 |
 | `test_greetings.py` | 3 | 인사 즉답 정확 일치 |
 
 ## For AI Agents
 
 ### Working In This Directory
 - `conftest.py`는 없다. `pyproject.toml`의 `[tool.pytest.ini_options] pythonpath`가 저장소 루트를 `sys.path`에 넣으므로 `PYTHONPATH=.`도 필요 없다.
-- **인증 환경변수를 주지 마라.** 환경변수 없이 수집·통과하는 것 자체가 이슈 #9의 회귀 테스트이고, CI도 그렇게 돌린다. 환경변수를 바꿔가며 검증해야 한다면 `src.auth._config.cache_clear()`를 호출할 것.
-- 새 테스트는 `unittest.TestCase` 클래스 + `test_` 메서드 스타일을 따른다. pytest 함수 스타일은 아직 쓰이지 않는다.
-- 비동기 코드는 `asyncio.run(scenario())` 패턴으로 감싸 동기 테스트 메서드 안에서 돌린다 (`test_main.py` 참고). `pytest-asyncio`는 쓰지 않는다.
+- **인증 환경변수를 주지 마라.** 환경변수 없이 수집·통과하는 것 자체가 이슈 #9의 회귀 테스트이고, CI도 그렇게 돌린다. 환경변수를 바꿔가며 검증해야 한다면 `src.auth._config.cache_clear()`(또는 Telegram 쪽은 `src.telegram_auth._config.cache_clear()`)를 호출할 것.
+- 대부분의 테스트는 `unittest.TestCase` 클래스 + `test_` 메서드 스타일을 따른다. `test_auth.py`/`test_telegram_auth.py`는 예외로, `pytest` 함수 스타일 + `monkeypatch` 픽스처를 쓴다 — 둘 다 인증 모듈 전용 스타일이니 그 두 파일을 고칠 때만 따라가면 된다.
+- 비동기 코드는 `asyncio.run(scenario())` 패턴으로 감싸 동기 테스트 메서드 안에서 돌린다 (`test_main.py`/`test_telegram_bot.py` 참고). `pytest-asyncio`는 쓰지 않는다.
+- busy-poll로 다른 태스크의 진행을 기다릴 때는 `for _ in range(N): await asyncio.sleep(0)` 같은 고정 반복 횟수보다 벽시계 데드라인(`asyncio.get_running_loop().time()` 기준 `while` 루프)을 쓸 것 — 고정 횟수는 스케줄러가 느린 환경(CPU 경합이 있는 컨테이너 등)에서 실제로 간헐적으로 실패한다(`test_telegram_bot.py`의 큐 대기 테스트가 이 패턴으로 고쳐졌다).
 - 테스트 픽스처에 개인 프로젝트 이름·절대경로를 넣지 말 것 (#16에서 걷어냈다).
 
 ### Testing Requirements
 ```bash
-uv run pytest -q          # 기대 결과: 382 passed, 14 subtests passed
+uv run pytest -q          # 기대 결과: 435 passed, 14 subtests passed
 ```
 `pytest`는 `[dependency-groups] dev`에 선언되어 있으므로 `uv run`이 알아서 끌어온다.
 
@@ -53,6 +58,6 @@ uv run pytest -q          # 기대 결과: 382 passed, 14 subtests passed
 ### External
 - `pytest` — 러너 (`[dependency-groups] dev`)
 - `unittest`, `unittest.mock`, `tempfile`, `asyncio` — 표준 라이브러리
-- `discord.py` — `src` 모듈 import 시 전이적으로 필요
+- `discord.py`, `python-telegram-bot` — `src` 모듈 import 시 전이적으로 필요
 
 <!-- MANUAL: -->
