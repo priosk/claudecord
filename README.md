@@ -266,7 +266,14 @@ scripts\run_telegram_bot.ps1 # Telegram 봇
 
 두 스크립트 모두 `.venv`의 파이썬을 직접 지정해 실행하므로 `scripts/setup`을 먼저 실행해 둬야 합니다. 데몬으로 띄우면 PATH가 로그인 셸보다 축소되어 `claude` CLI를 못 찾을 수 있습니다 — 이럴 때 `.env`에 `CLAUDE_BIN`을 절대경로로 지정하세요. `scripts/check_claude.sh` / `check_claude.ps1`으로 봇이 실제로 쓸 `claude` 바이너리(`.env`의 `CLAUDE_BIN` → PATH 순으로 탐색)에 정상적으로 연결되는지 미리 진단할 수 있습니다.
 
-> 현재 `launchd_load.sh`/`register_scheduled_task.ps1`은 Discord 봇(`src/main.py`) 전용입니다. Telegram 봇을 상시 구동하려면 지금은 터미널을 열어 두거나(`scripts/run_telegram_bot.sh`), `nohup`·`tmux`·직접 만든 launchd/작업 스케줄러 항목 등으로 스스로 등록해야 합니다.
+**Telegram 봇**은 전용 스크립트를 쓰세요 (Discord용과 별개로 등록됩니다):
+
+| 플랫폼 | 등록 | 해제 |
+|---|---|---|
+| macOS | `scripts/launchd_load_telegram.sh` | `launchctl unload ~/Library/LaunchAgents/com.telegram-claude-assistant.plist` |
+| Windows | `scripts\register_telegram_scheduled_task.ps1` | `scripts\unregister_scheduled_task.ps1 -TaskName telegram-claude-assistant` |
+
+> ⚠️ 상시 구동은 "PC가 켜져 있고 로그인된 상태"일 때만 동작합니다. PC가 **절전/잠자기** 상태가 되면 봇도 멈추니, 항상 응답받고 싶다면 전원 설정에서 절전을 끄거나(맥은 `caffeinate`) 24시간 켜 둘 PC를 쓰세요.
 
 ---
 
