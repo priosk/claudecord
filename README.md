@@ -6,7 +6,8 @@
 ![샘플](example.jpeg)
 
 > **PC 앞을 떠나도 멈추지 않는 AI 비서**
-> 모바일에서 Discord 메시지 한 통이면, 집에 있는 내 PC의 Claude Code가 깨어나 일을 시작합니다.
+> 모바일에서 Discord 또는 Telegram 메시지 한 통이면, 집에 있는 내 PC의 Claude Code가 깨어나 일을 시작합니다.
+> 둘 중 편한 메신저 하나만 고르면 됩니다 — 기능은 동일합니다.
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)]()
 [![Claude Code](https://img.shields.io/badge/Powered%20by-Claude%20Code-D97757)]()
@@ -71,7 +72,11 @@
 
 - Python 3.11 이상
 - Claude Code CLI 설치 및 로그인 완료
-- Discord 계정
+- Discord 계정 **또는** Telegram 계정 (둘 다 있어도 되고, 하나만 있어도 된다)
+
+> Telegram만 쓰고 싶다면 아래 "1~4. Discord 봇 만들기" 네 개 섹션은 건너뛰고
+> [Telegram 봇 만들기](#telegram-봇을-쓰고-싶다면-discord-대신)로 바로 가면 된다.
+> 개발자가 아니어도 되고, Discord보다 오히려 절차가 더 짧다.
 
 ### 1. Discord 봇 만들기
 
@@ -178,23 +183,75 @@ ALLOWED_CHANNEL_IDS=987654321098765432
 
 > 응답이 느리게 느껴지면 먼저 `DEBUG_TIMING=1`로 어느 구간이 오래 걸리는지 확인하세요. 그다음 `CLAUDE_MODEL`을 조정하는 순서가 빠릅니다.
 
+### Telegram 봇을 쓰고 싶다면 (Discord 대신)
+
+Discord처럼 개발자 포털에 접속하고 서버를 만들 필요가 없습니다. **전부 Telegram 앱 안에서** 끝납니다.
+
+#### 1. Telegram 봇 만들기
+
+1. Telegram 앱에서 **[@BotFather](https://t.me/BotFather)** 를 검색해 대화를 시작합니다.
+2. `/newbot` 전송 → 봇 이름(표시용) 입력 → 봇 아이디(반드시 `bot`으로 끝남, 예: `my_claudecord_bot`) 입력.
+3. BotFather가 답장으로 주는 **토큰**을 복사해 안전한 곳에 저장합니다. (`123456789:ABC-...` 형태)
+
+> ⚠️ **보안 주의**: 이 토큰이 곧 Discord의 `DISCORD_BOT_TOKEN`과 같은 역할입니다. 유출되면 BotFather에게 `/token`으로 즉시 재발급하세요.
+
+#### 2. 본인 사용자 ID 확보
+
+1. Telegram에서 **[@userinfobot](https://t.me/userinfobot)** 을 검색해 대화를 시작하면, 본인의 숫자 ID를 바로 알려줍니다.
+2. 방금 만든 내 봇을 검색해 **먼저 말을 걸어(예: "안녕") 대화를 시작**해 둡니다. (Telegram 봇은 상대가 먼저 말을 걸어야 답장을 보낼 수 있습니다.)
+
+그룹 채팅에서도 쓰고 싶다면, 그 그룹에 봇을 초대한 뒤 그룹의 채팅 ID를 알아내 `ALLOWED_TELEGRAM_CHAT_IDS`에 추가하면 됩니다(예: 그룹에 `@getidsbot` 같은 봇을 잠깐 초대해 확인). 본인과의 1:1 대화만 쓸 계획이라면 이 단계는 생략해도 됩니다 — 개인 채팅은 `OWNER_TELEGRAM_ID`만으로 항상 허용됩니다.
+
+#### 3. 환경 변수 설정
+
+`.env`에 다음 세 줄을 추가합니다 (Discord용 변수와 같은 파일에 같이 둬도 됩니다):
+
+```bash
+# Telegram 봇 토큰 (절대 외부 노출 금지)
+TELEGRAM_BOT_TOKEN=your_bot_token_here
+
+# 봇을 사용할 본인 Telegram 사용자 ID (쉼표로 여러 개 등록 가능)
+OWNER_TELEGRAM_ID=123456789
+
+# 그룹 채팅에서도 쓸 경우에만 채팅 ID를 등록 (선택, 쉼표로 여러 개 가능)
+ALLOWED_TELEGRAM_CHAT_IDS=
+```
+
+경로/프로젝트 태그, 성능 튜닝, 잡 상한, 출력·진단 변수는 위 Discord 섹션의 표와 **완전히 동일하게** 적용됩니다 — 플랫폼과 무관한 설정입니다.
+
+#### 4. 실행
+
+```bash
+python -m src.telegram_bot        # 또는 scripts/run_telegram_bot.sh
+```
+
+```powershell
+scripts\run_telegram_bot.ps1       # Windows
+```
+
+내 봇과의 채팅창에 메시지를 보내면 바로 응답이 옵니다. Discord 봇과 마찬가지로 `/clear`(대화 초기화), `종료`(실행 중인 세션 정리)를 그대로 쓸 수 있습니다.
+
+> Discord와 Telegram 봇은 완전히 독립된 프로세스입니다. 원한다면 동시에 둘 다 띄워 두고 상황에 맞는 쪽으로 메시지를 보내도 됩니다.
+
 ### 5. 설치 및 실행
 
 **macOS / Linux**
 
 ```bash
 pip install -e .          # 또는 scripts/setup.sh (.venv를 만들어 설치)
-python -m src.main        # 또는 scripts/run_bot.sh (.venv 파이썬으로 실행)
+python -m src.main        # Discord 봇. 또는 scripts/run_bot.sh (.venv 파이썬으로 실행)
+python -m src.telegram_bot # Telegram 봇. 또는 scripts/run_telegram_bot.sh
 ```
 
 **Windows (PowerShell)**
 
 ```powershell
 scripts\setup.ps1         # .venv 생성 후 pip install -e .
-scripts\run_bot.ps1       # .venv 파이썬으로 실행
+scripts\run_bot.ps1       # Discord 봇
+scripts\run_telegram_bot.ps1 # Telegram 봇
 ```
 
-의존성의 단일 진실 원천은 `pyproject.toml`이고, 진입점은 `src/main.py`의 `main()`입니다. `scripts/run_bot.sh`·`run_bot.ps1`은 `scripts/setup`으로 만든 `.venv`가 있는지 먼저 확인하고, 없으면 안내 메시지와 함께 중단합니다.
+의존성의 단일 진실 원천은 `pyproject.toml`이고, 진입점은 Discord 봇이 `src/main.py`의 `main()`, Telegram 봇이 `src/telegram_bot.py`의 `main()`입니다. 필요한 쪽만 실행하면 되고, 둘 다 실행할 필요는 없습니다. `scripts/run_bot.sh`·`run_bot.ps1`·`run_telegram_bot.sh`·`run_telegram_bot.ps1`은 모두 `scripts/setup`으로 만든 `.venv`가 있는지 먼저 확인하고, 없으면 안내 메시지와 함께 중단합니다.
 
 봇이 온라인 상태로 바뀌면 준비 완료입니다.
 
@@ -208,6 +265,15 @@ scripts\run_bot.ps1       # .venv 파이썬으로 실행
 | Windows | `scripts\register_scheduled_task.ps1` — 로그온 시 작업 스케줄러로 기동 (실패 시 최대 3회 재시작) | `scripts\unregister_scheduled_task.ps1` |
 
 두 스크립트 모두 `.venv`의 파이썬을 직접 지정해 실행하므로 `scripts/setup`을 먼저 실행해 둬야 합니다. 데몬으로 띄우면 PATH가 로그인 셸보다 축소되어 `claude` CLI를 못 찾을 수 있습니다 — 이럴 때 `.env`에 `CLAUDE_BIN`을 절대경로로 지정하세요. `scripts/check_claude.sh` / `check_claude.ps1`으로 봇이 실제로 쓸 `claude` 바이너리(`.env`의 `CLAUDE_BIN` → PATH 순으로 탐색)에 정상적으로 연결되는지 미리 진단할 수 있습니다.
+
+**Telegram 봇**은 전용 스크립트를 쓰세요 (Discord용과 별개로 등록됩니다):
+
+| 플랫폼 | 등록 | 해제 |
+|---|---|---|
+| macOS | `scripts/launchd_load_telegram.sh` | `launchctl unload ~/Library/LaunchAgents/com.telegram-claude-assistant.plist` |
+| Windows | `scripts\register_telegram_scheduled_task.ps1` | `scripts\unregister_scheduled_task.ps1 -TaskName telegram-claude-assistant` |
+
+> ⚠️ 상시 구동은 "PC가 켜져 있고 로그인된 상태"일 때만 동작합니다. PC가 **절전/잠자기** 상태가 되면 봇도 멈추니, 항상 응답받고 싶다면 전원 설정에서 절전을 끄거나(맥은 `caffeinate`) 24시간 켜 둘 PC를 쓰세요.
 
 ---
 
@@ -234,14 +300,14 @@ CI(`.github/workflows/ci.yml`)도 동일하게 `uv run pytest -q`를 macOS/Linux
 
 ## 🔐 보안 모델 — 반드시 읽어주세요
 
-claudecord는 **Discord 메시지 한 통으로 내 PC에서 Claude Code CLI를 실행하는** 도구입니다.
-이 봇에 메시지를 보낼 수 있는 사람은 **내 계정 권한으로 무엇이든 할 수 있습니다.**
+claudecord는 **Discord 또는 Telegram 메시지 한 통으로 내 PC에서 Claude Code CLI를 실행하는** 도구입니다.
+이 봇에 메시지를 보낼 수 있는 사람은 **내 계정 권한으로 무엇이든 할 수 있습니다.** 아래 내용은 두 플랫폼 모두에 동일하게 적용됩니다.
 
 ### 실제 방어선은 하나입니다
 
 | 계층 | 무엇을 막나 | 실효성 |
 |---|---|---|
-| `OWNER_DISCORD_ID` / `ALLOWED_CHANNEL_IDS` 화이트리스트 | 다른 사람의 명령 | ✅ **유일한 실질 방어선** |
+| `OWNER_DISCORD_ID` / `ALLOWED_CHANNEL_IDS` (Discord), `OWNER_TELEGRAM_ID` / `ALLOWED_TELEGRAM_CHAT_IDS` (Telegram) 화이트리스트 | 다른 사람의 명령 | ✅ **유일한 실질 방어선** |
 | `--disallowedTools` (`rm`, `sudo`, `curl` 등) | 실수로 나간 파괴적 명령 | ⚠️ 사고 방지용에 한함 |
 | `--tools` (도구 28개 → 9개) | 봇이 안 쓰는 도구 전부 | ⚠️ 표면 축소이지 격리는 아님 |
 | 프롬프트 규칙("두 디렉터리 밖에는 쓰지 않는다") | — | ❌ 강제력 없음 |
